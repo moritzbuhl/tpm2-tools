@@ -7,7 +7,7 @@ jobs:
     if: "!contains(github.ref, 'coverity_scan')"
     strategy:
       matrix:
-        docker_image: [ubuntu-20.04, fedora-30, opensuse-leap, fedora-32, ubuntu-22.04, ubuntu-24.04, arch-linux]
+        docker_image: [ubuntu-26.04-dev, ubuntu-24.04-dev, ubuntu-22.04-dev, fedora-44-dev, opensuse-leap-dev, arch-linux-dev]
         compiler: [gcc, clang]
     steps:
       - name: Check out repository
@@ -40,7 +40,7 @@ jobs:
           tpm2-software/ci/runCI@main
         with:
           PROJECT_NAME: ${{ github.event.repository.name }}
-          DOCKER_IMAGE: ubuntu-20.04
+          DOCKER_IMAGE: ubuntu-26.04-dev
           CC: ${{ matrix.compiler }}
           TPM2_TSS_VERSION: master
           GIT_FULL_CLONE: true
@@ -61,7 +61,7 @@ jobs:
         with:
           PROJECT_NAME: ${{ github.event.repository.name }}
           ENABLE_COVERAGE: true
-          DOCKER_IMAGE: ubuntu-20.04
+          DOCKER_IMAGE: ubuntu-26.04-dev
           CC: gcc
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -92,7 +92,7 @@ jobs:
           REPO_BRANCH: ${{ github.ref }}
           REPO_NAME: ${{ github.repository }}
           ENABLE_COVERITY: true
-          DOCKER_IMAGE: ubuntu-20.04
+          DOCKER_IMAGE: ubuntu-26.04-dev
           CC: gcc
           COVERITY_SCAN_TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
           COVERITY_SUBMISSION_EMAIL: william.c.roberts@gmail.com
