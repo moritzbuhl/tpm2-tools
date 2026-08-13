@@ -292,6 +292,12 @@ tpm2_option_code tpm2_handle_options(int argc, char **argv,
         { "pwd-session",   no_argument,       NULL, 'z' },
     };
 
+    const char *tcti_conf_option = NULL;
+    int c;
+    bool manpager = true;
+    bool explicit_manpager = false;
+    bool show_help = false;
+    bool result = false;
 
     /* handle any options */
     const char* common_short_opts = "T:h::vVQZz";
@@ -302,9 +308,7 @@ tpm2_option_code tpm2_handle_options(int argc, char **argv,
     }
 
     /* Get the options from the tool */
-    bool show_help = false;
     tpm2_option_code rc = tpm2_option_code_continue;
-    bool result = false;
     if (tool_opts) {
         result = tpm2_options_cat(&opts, tool_opts);
         if (!result) {
@@ -314,11 +318,7 @@ tpm2_option_code tpm2_handle_options(int argc, char **argv,
     }
 
     /* Parse the options, calling the tool callback if unknown */
-    const char *tcti_conf_option = NULL;
     optind = 1;
-    int c;
-    bool manpager = true;
-    bool explicit_manpager = false;
     while ((c = getopt_long(argc, argv, opts->short_opts, opts->long_opts, NULL))
             != -1) {
         switch (c) {
