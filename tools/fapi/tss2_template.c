@@ -221,6 +221,7 @@ TSS2_RC auth_callback(
     } else {
         printf ("Authorize %s \"%s\": ", objectPath, description);
     }
+    fflush(stdout);
     tcsetattr (STDIN_FILENO, TCSANOW, &new);
 
     size_t input_size = 0;
@@ -333,6 +334,7 @@ TSS2_RC sign_callback(
 
     }
     printf("Filename for nonce output: ");
+    fflush(stdout);
     rc = tpm2_safe_read_from_stdin(READ_SIZE, path);
     if (rc != true){
         fprintf (stderr, "Please enter a valid file path\n");
@@ -347,6 +349,7 @@ TSS2_RC sign_callback(
     }
 
     printf("Filename for signature input: ");
+    fflush(stdout);
     rc = tpm2_safe_read_from_stdin(READ_SIZE, path);
     if (rc != true){
         fprintf (stderr, "Please enter a valid file path\n");
@@ -390,6 +393,7 @@ TSS2_RC branch_callback(
 
     while (1) {
         printf ("Your choice: ");
+        fflush(stdout);
         if (scanf ("%zu", selectedBranch) != EOF) {
             while (getchar () != '\n'); /* Consume all remaining input */
             if (*selectedBranch > numBranches || *selectedBranch < 1) {
