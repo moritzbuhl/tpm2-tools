@@ -38,9 +38,11 @@ static bool handle_hex_password(const char *password, TPM2B_AUTH *auth) {
     return true;
 }
 
-bool handle_password(const char *password, TPM2B_AUTH *auth);
+static bool handle_password_rec(const char *password, TPM2B_AUTH *auth,
+        unsigned int depth);
 
-static tool_rc get_auth_for_file_param(const char* password, TPM2B_AUTH *auth) {
+static tool_rc get_auth_for_file_param(const char* password, TPM2B_AUTH *auth,
+        unsigned int depth) {
     const char* path = password;
     size_t size = strlen("hex:") + 2 * sizeof(auth->buffer) + strlen("\r\n");
     bool is_a_tty = isatty(STDIN_FILENO);
@@ -108,7 +110,7 @@ static tool_rc get_auth_for_file_param(const char* password, TPM2B_AUTH *auth) {
         }
     }
     /* from here the buffer has been populated with the password */
-    bool ret = handle_password((char *) buffer, auth);
+    bool ret = handle_password_rec((char *) buffer, auth, depth);
     if (!ret) {
         free(buffer);
         return tool_rc_general_error;
@@ -141,14 +143,21 @@ bool handle_str_password(const char *password, TPM2B_AUTH *auth) {
     return true;
 }
 
-bool handle_password(const char *password, TPM2B_AUTH *auth) {
+#define MAX_PASSWORD_FILE_NESTING 16
+static bool handle_password_rec(const char *password, TPM2B_AUTH *auth,
+        unsigned int depth) {
+
+    if (depth >= MAX_PASSWORD_FILE_NESTING) {
+        LOG_ERR("Maximum password file redirection depth reached");
+        return false;
+    }
 
     bool is_file = !strncmp(password, "file:", 5);
 
     if (is_file) {
-        tool_rc rc = get_auth_for_file_param(password + 5, auth);
+        tool_rc rc = get_auth_for_file_param(password + 5, auth, depth + 1);
         if (rc != tool_rc_success) {
-            LOG_ERR("get password");
+            LOG_ERR("get password for redirected file");
             return false;
         }
         return true;
@@ -162,6 +171,10 @@ bool handle_password(const char *password, TPM2B_AUTH *auth) {
 
     /* must be string, handle it */
     return handle_str_password(password, auth);
+}
+
+bool handle_password(const char *password, TPM2B_AUTH *auth) {
+    return handle_password_rec(password, auth, 0);
 }
 
 static tool_rc start_hmac_session(ESYS_CONTEXT *ectx, TPM2B_AUTH *auth,
@@ -396,7 +409,7 @@ static tool_rc handle_file(ESYS_CONTEXT *ectx, const char *path,
 
     TPM2B_AUTH auth = { 0 };
 
-    tool_rc rc = get_auth_for_file_param(path, &auth);
+    tool_rc rc = get_auth_for_file_param(path, &auth, 1);
 
     if (rc != tool_rc_success) {
         LOG_ERR("get password");
